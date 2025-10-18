@@ -3,7 +3,8 @@ import logging
 import asyncio
 from config import TOKEN
 from handlers import router
-from database.models import create_tables
+from database.db import create_tables
+
 
 async def main():
     logging.basicConfig(level=logging.INFO)
@@ -17,4 +18,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-   

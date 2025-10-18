@@ -1,45 +1,49 @@
-import sqlite3
+from sqlalchemy import Column, Integer, String, ForeignKey, Text, TIMESTAMP
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
-def create_tables():
-    with sqlite3.connect('bron.db') as conn:
-        cur = conn.cursor()
+Base = declarative_base()
 
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS categories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL
-        )
-        """)
+class Category(Base):
+    __tablename__ = 'categories'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    code = Column(String, unique=True, nullable=False)
+    parent_id = Column(Integer, ForeignKey('categories.id'), nullable=True)
 
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            description TEXT,
-            price INTEGER,
-            category_id INTEGER,
-            subcategory TEXT,
-            image1 TEXT,
-            image2 TEXT,
-            image3 TEXT,
-            image4 TEXT,
-            size TEXT,
-            country TEXT,
-            FOREIGN KEY (category_id) REFERENCES categories(id)
-        )
-        """)
+    parent = relationship("Category", remote_side=[id], backref="children")
+    products = relationship("Product", back_populates="category")
 
-        cur.execute("""
-        CREATE TABLE IF NOT EXISTS orders (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            name TEXT,
-            phone TEXT,
-            product_id INTEGER,
-            comment TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (product_id) REFERENCES products(id)
-        )
-        """)
 
-        conn.commit()
+class Product(Base):
+    __tablename__ = 'products'
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    price = Column(Integer)
+    category_id = Column(Integer, ForeignKey('categories.id'))
+    subcategory = Column(String)  # e.g. "ru", "tr", "pryamaya", "uglovaya"
+    image1 = Column(String)
+    image2 = Column(String)
+    image3 = Column(String)
+    image4 = Column(String)
+    size = Column(String)
+    country = Column(String)
+    type_ = Column(String)  # прямая, угловая и др.
+
+    category = relationship("Category", back_populates="products")
+
+
+class Order(Base):
+    __tablename__ = 'orders'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    name = Column(String)
+    phone = Column(String)
+    product_id = Column(Integer, ForeignKey('products.id'))
+    comment = Column(Text)
+    status = Column(String, default="Новая")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow)
+
+    product = relationship("Product")
