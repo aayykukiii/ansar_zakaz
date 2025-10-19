@@ -12,9 +12,10 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     create_tables()
+    
     await dp.start_polling(bot)
     
-    
+
 
 if __name__ == "__main__":
     asyncio.run(main())
